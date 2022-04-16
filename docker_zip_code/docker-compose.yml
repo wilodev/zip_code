@@ -1,0 +1,61 @@
+version: "3.8"
+services:
+    #PHP FPM Servicio
+    laravel_app:
+        container_name: "${CONTAINER_NAME}_fpm" # Nombre del contenedor
+        build: # Construción de la imagen custom de php 8.1 desde el archivo Dockerfile en la raiz de este direcortio php8.1
+            context: .
+            dockerfile: ./Dockerfile
+            labels:
+                - com.host.description=${CONTAINER_NAME}_fpm
+            args: # Argumentos de la imagen
+                PROJECT_NAME: ${PROJECT_NAME}
+        volumes:
+            - ./php/local.ini:/usr/local/etc/php/conf.d/local.ini # Se habilita la configuración del local
+            - ./php/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini # Se habilita la configuración de subida
+            - ./php/xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini # Configuración de xdebug para php
+            - ./php/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini #Configuración de Xdebug para docker
+            - ./errors/error_reporting.ini:/usr/local/etc/php/conf.d/error_reporting.ini # Se habilita los errores
+            - ../:/var/www/public/$PROJECT_NAME/ # Copiamos la ruta del proyecto
+        networks:
+            server_proxy:
+    #Nginx Web Servicio
+    laravel_web:
+        image: nginx:1.21.6
+        container_name: "${CONTAINER_NAME}_nginx" # Nombre del contenedor
+        restart: unless-stopped
+        tty: true
+        depends_on:
+            - laravel_app
+        volumes:
+            - ./nginx/conf.d/:/etc/nginx/conf.d/ # Se copian las configuraciones de nginx
+            - ./ssl/:/etc/nginx/ssl/ # Se copian los certificados SSL
+            - ../:/var/www/public/$PROJECT_NAME/ # Copiamos la ruta del proyecto
+        ports:
+            - "80:80"
+            - "443:443"
+        networks:
+            server_proxy:
+    #MySQL Servicio
+    laravel_db:
+        image: mysql/mysql-server:5.7
+        container_name: laravel_db
+        platform: linux/amd64
+        restart: unless-stopped
+        tty: true
+        ports:
+            - "3306:3306"
+        environment:
+            MYSQL_DATABASE: $DB_DATABASE
+            MYSQL_ROOT_PASSWORD: $DB_ROOT_PASSWORD
+            MYSQL_USER: $DB_USER
+            MYSQL_PASSWORD: $DB_PASSWORD
+            SERVICE_TAGS: dev
+            SERVICE_NAME: mysql
+        networks:
+            server_proxy:
+# Red Puente
+networks:
+    server_proxy:
+        name: server_proxy
+        driver: bridge
