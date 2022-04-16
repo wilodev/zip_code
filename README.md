@@ -23,4 +23,6 @@ Antes de empezar a consultar por código postal debes cambiar a la rama develop 
 
 Al terminar de recorrer todos los archivos zip se vuelve al home y podemos acceder con el enlace `Api Prueba del proyecto` o `https://localhost/api/zip-codes/22994`.
 
+Esta opción solo esta en la rama `develop` en main de heroku no tenemos esta opción.
+
 **Nota: En las pruebas realizadas en este docker el tiempo es de 270ms**
