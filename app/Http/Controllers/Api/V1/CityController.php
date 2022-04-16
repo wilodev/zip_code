@@ -27,12 +27,12 @@ class CityController extends Controller
             ->where('zip_code', $zip_code)
             ->get();
         // Se realiza la validación que tenemos un resultado
-        if($result){
+        if(count($result) > 0){
             // Se retorna la respuesta con el formato del recurso pero con data
             return new CityResource($result);
         }
         // Retornamos una respuesta de not found
-        return response()->json(['message' => 'Not Found'], 404);
+        return response()->json(['message' => 'Zip Code Not Found'], 404);
     }
 
 
